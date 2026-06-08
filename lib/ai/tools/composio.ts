@@ -6,6 +6,9 @@ let composioClient: Composio<VercelProvider> | null = null;
 
 function getComposioClient(): Composio<VercelProvider> | null {
   if (!process.env.COMPOSIO_API_KEY) {
+    console.warn(
+      "[composio] COMPOSIO_API_KEY is not set in this environment — no Composio tools will be loaded."
+    );
     return null;
   }
 
@@ -37,9 +40,17 @@ export async function getComposioTools(userId: string): Promise<ToolSet> {
 
   try {
     const session = await composio.create(userId);
-    return (await session.tools()) as ToolSet;
+    const tools = (await session.tools()) as ToolSet;
+    const toolNames = Object.keys(tools);
+    console.log(
+      `[composio] loaded ${toolNames.length} tool(s) for user "${userId}" (session ${session.sessionId}): ${toolNames.join(", ") || "none"}`
+    );
+    return tools;
   } catch (error) {
-    console.error("Failed to load Composio tools:", error);
+    console.error(
+      `[composio] failed to load tools for user "${userId}":`,
+      error
+    );
     return {};
   }
 }
