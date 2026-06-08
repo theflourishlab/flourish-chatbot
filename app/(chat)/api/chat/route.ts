@@ -20,6 +20,7 @@ import {
 } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
+import { getComposioTools } from "@/lib/ai/tools/composio";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { editDocument } from "@/lib/ai/tools/edit-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
@@ -188,6 +189,11 @@ export async function POST(request: Request) {
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
+    const toolsDisabled = isReasoningModel && !supportsTools;
+    const composioTools = toolsDisabled
+      ? {}
+      : await getComposioTools(session.user.id);
+
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
@@ -196,16 +202,10 @@ export async function POST(request: Request) {
           system: systemPrompt({ requestHints, supportsTools }),
           messages: modelMessages,
           stopWhen: stepCountIs(5),
-          experimental_activeTools:
-            isReasoningModel && !supportsTools
-              ? []
-              : [
-                  "getWeather",
-                  "createDocument",
-                  "editDocument",
-                  "updateDocument",
-                  "requestSuggestions",
-                ],
+          // When tools are enabled, leave `experimental_activeTools` unset so
+          // every tool in the `tools` map below (base tools + the dynamically
+          // loaded Composio tools) is available to the model.
+          experimental_activeTools: toolsDisabled ? [] : undefined,
           providerOptions: {
             ...(modelConfig?.gatewayOrder && {
               gateway: { order: modelConfig.gatewayOrder },
@@ -232,6 +232,7 @@ export async function POST(request: Request) {
               dataStream,
               modelId: chatModel,
             }),
+            ...composioTools,
           },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

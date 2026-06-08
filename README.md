@@ -33,6 +33,23 @@
   - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
 - [Auth.js](https://authjs.dev)
   - Simple and secure authentication
+- [Composio](https://composio.dev) tool integrations
+  - The chat agent can call tools from 250+ external apps (Gmail, GitHub, Slack, Google Calendar, and more) through Composio's [tool router](https://docs.composio.dev/tool-router/overview)
+  - Tools are loaded per user at request time and merged with the built-in tools, so the model can take real actions on connected accounts
+
+## Composio Tools
+
+When `COMPOSIO_API_KEY` is set, the chat route loads Composio tools for the signed-in user and exposes them to the model alongside the built-in tools. Implementation:
+
+- `lib/ai/tools/composio.ts` — creates a per-user [tool-router session](https://docs.composio.dev/tool-router/overview) (`composio.create(userId)`) and returns the AI SDK tool set. If `COMPOSIO_API_KEY` is missing or the session fails, it returns no tools so the chat keeps working.
+- `app/(chat)/api/chat/route.ts` — merges those tools into the `streamText` call.
+
+### What you need to do
+
+1. Get an API key from the [Composio dashboard](https://app.composio.dev) and set `COMPOSIO_API_KEY` (locally in `.env.local`, or in your Vercel project's Environment Variables). Redeploy so the variable takes effect.
+2. **Connect the accounts you want to act on.** The API key alone lets the model *discover* tools, but to take actions on a platform (e.g. send a Gmail, post to a channel) that platform's account must first be authorized via OAuth. The first time the model uses a tool for an un-connected app, Composio returns an authorization link to complete the connection. You can also pre-connect accounts and configure which toolkits are available from the Composio dashboard.
+
+> Which apps and actions are available — and how deep that support goes — depends on Composio's toolkit catalog. Check the [Composio tools directory](https://composio.dev/tools) to confirm a given platform (and the specific actions you want) is supported before relying on it.
 
 ## Model Providers
 
