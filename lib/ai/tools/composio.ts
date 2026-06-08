@@ -2,9 +2,9 @@ import { Composio } from "@composio/core";
 import { VercelProvider } from "@composio/vercel";
 import type { ToolSet } from "ai";
 
-let composioClient: Composio | null = null;
+let composioClient: Composio<VercelProvider> | null = null;
 
-function getComposioClient(): Composio | null {
+function getComposioClient(): Composio<VercelProvider> | null {
   if (!process.env.COMPOSIO_API_KEY) {
     return null;
   }
