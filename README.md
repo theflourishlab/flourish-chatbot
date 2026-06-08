@@ -46,7 +46,8 @@ When `COMPOSIO_API_KEY` is set, the chat route loads Composio tools for the sign
 
 ### What you need to do
 
-1. Get an API key from the [Composio dashboard](https://app.composio.dev) and set `COMPOSIO_API_KEY` (locally in `.env.local`, or in your Vercel project's Environment Variables). Redeploy so the variable takes effect.
+1. Get a **project (standard) API key** from the [Composio dashboard](https://app.composio.dev) and set `COMPOSIO_API_KEY` (locally in `.env.local`, or in your Vercel project's Environment Variables). Redeploy so the variable takes effect.
+   - **Do not use the _playground_ API key** shown in the quickstart. A playground key is locked to a single hard-coded user, so creating a session for any other user fails with `403 user_id does not match the user this playground API key is locked to`. This app creates one session per signed-in user, so it needs a project key for server-to-server use.
 2. **Connect the accounts you want to act on.** The API key alone lets the model *discover* tools, but to take actions on a platform (e.g. send a Gmail, post to a channel) that platform's account must first be authorized via OAuth. The first time the model uses a tool for an un-connected app, Composio returns an authorization link to complete the connection. You can also pre-connect accounts and configure which toolkits are available from the Composio dashboard.
 
 > Which apps and actions are available — and how deep that support goes — depends on Composio's toolkit catalog. Check the [Composio tools directory](https://composio.dev/tools) to confirm a given platform (and the specific actions you want) is supported before relying on it.
